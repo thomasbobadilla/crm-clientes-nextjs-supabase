@@ -26,18 +26,22 @@ export default function ResumoClientes({ clientes }: Props) {
     {
       titulo: "Total de clientes",
       valor: total,
+      classe: "border-gray-200",
     },
     {
       titulo: "Clientes ativos",
       valor: ativos,
+      classe: "border-green-200",
     },
     {
       titulo: "Prospects",
       valor: prospects,
+      classe: "border-blue-200",
     },
     {
       titulo: "Clientes inativos",
       valor: inativos,
+      classe: "border-gray-300",
     },
   ];
 
@@ -46,13 +50,13 @@ export default function ResumoClientes({ clientes }: Props) {
       {cards.map((card) => (
         <div
           key={card.titulo}
-          className="rounded-lg bg-white p-5 shadow"
+          className={`rounded-xl border bg-white p-5 shadow-sm transition hover:shadow-md ${card.classe}`}
         >
-          <p className="text-sm text-gray-500">
+          <p className="text-sm font-medium text-gray-500">
             {card.titulo}
           </p>
 
-          <p className="mt-2 text-3xl font-bold">
+          <p className="mt-3 text-3xl font-bold text-gray-900">
             {card.valor}
           </p>
         </div>
