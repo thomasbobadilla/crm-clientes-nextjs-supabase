@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import FormCliente from "@/components/clientes/FormCliente";
 
 type Cliente = {
   id: number;
@@ -9,6 +10,9 @@ type Cliente = {
   email: string | null;
   telefone: string | null;
   empresa: string | null;
+  cargo: string | null;
+  cidade: string | null;
+  estado: string | null;
   status: string | null;
 };
 
@@ -16,24 +20,24 @@ export default function Home() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [erro, setErro] = useState("");
 
-  useEffect(() => {
-    async function carregarClientes() {
-      const supabase = createClient();
+  async function carregarClientes() {
+    const supabase = createClient();
 
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("*")
-        .order("id", { ascending: false });
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("*")
+      .order("id", { ascending: false });
 
-      if (error) {
-        console.error(error);
-        setErro(error.message);
-        return;
-      }
-
-      setClientes(data ?? []);
+    if (error) {
+      console.error(error);
+      setErro(error.message);
+      return;
     }
 
+    setClientes(data ?? []);
+  }
+
+  useEffect(() => {
     carregarClientes();
   }, []);
 
@@ -47,6 +51,8 @@ export default function Home() {
         <p className="mb-8 text-gray-600">
           Next.js + Supabase
         </p>
+
+        <FormCliente onClienteCriado={carregarClientes} />
 
         {erro && (
           <div className="mb-6 rounded bg-red-100 p-4 text-red-700">
@@ -70,19 +76,38 @@ export default function Home() {
                   key={cliente.id}
                   className="rounded border p-4"
                 >
-                  <p className="font-semibold">{cliente.nome}</p>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-semibold">
+                        {cliente.nome}
+                      </p>
 
-                  <p className="text-sm text-gray-600">
-                    {cliente.email || "E-mail não informado"}
-                  </p>
+                      <p className="text-sm text-gray-600">
+                        {cliente.email || "E-mail não informado"}
+                      </p>
 
-                  <p className="text-sm text-gray-600">
-                    {cliente.empresa || "Empresa não informada"}
-                  </p>
+                      <p className="text-sm text-gray-600">
+                        {cliente.telefone || "Telefone não informado"}
+                      </p>
 
-                  <p className="mt-1 text-sm">
-                    Status: {cliente.status}
-                  </p>
+                      <p className="text-sm text-gray-600">
+                        {cliente.empresa || "Empresa não informada"}
+                      </p>
+
+                      {cliente.cidade && (
+                        <p className="text-sm text-gray-600">
+                          {cliente.cidade}
+                          {cliente.estado
+                            ? ` - ${cliente.estado}`
+                            : ""}
+                        </p>
+                      )}
+                    </div>
+
+                    <span className="rounded bg-gray-100 px-3 py-1 text-sm">
+                      {cliente.status}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
