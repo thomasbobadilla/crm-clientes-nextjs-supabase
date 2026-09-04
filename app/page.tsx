@@ -1,5 +1,6 @@
 "use client";
 
+import FormEditarCliente from "@/components/clientes/FormEditarCliente";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import FormCliente from "@/components/clientes/FormCliente";
@@ -14,9 +15,12 @@ type Cliente = {
   cidade: string | null;
   estado: string | null;
   status: string | null;
+  observacoes: string | null;
 };
 
 export default function Home() {
+  const [clienteEditando, setClienteEditando] =
+  useState<Cliente | null>(null);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [erro, setErro] = useState("");
 
@@ -52,7 +56,18 @@ export default function Home() {
           Next.js + Supabase
         </p>
 
-        <FormCliente onClienteCriado={carregarClientes} />
+        {clienteEditando ? (
+  <FormEditarCliente
+    cliente={clienteEditando}
+    onAtualizado={() => {
+      setClienteEditando(null);
+      carregarClientes();
+    }}
+    onCancelar={() => setClienteEditando(null)}
+  />
+) : (
+  <FormCliente onClienteCriado={carregarClientes} />
+)}
 
         {erro && (
           <div className="mb-6 rounded bg-red-100 p-4 text-red-700">
@@ -71,7 +86,19 @@ export default function Home() {
             </p>
           ) : (
             <div className="space-y-3">
-              {clientes.map((cliente) => (
+              {clientes.map((<div className="flex flex-col items-end gap-3">
+  <span className="rounded bg-gray-100 px-3 py-1 text-sm">
+    {cliente.status}
+  </span>
+
+  <button
+    type="button"
+    onClick={() => setClienteEditando(cliente)}
+    className="rounded border border-gray-300 px-3 py-1 text-sm"
+  >
+    Editar
+  </button>
+</div>) => (
                 <div
                   key={cliente.id}
                   className="rounded border p-4"
