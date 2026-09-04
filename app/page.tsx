@@ -1,5 +1,6 @@
 "use client";
 
+import ResumoClientes from "@/components/dashboard/ResumoClientes";
 import ListaClientes from "@/components/clientes/ListaClientes";
 import FormEditarCliente from "@/components/clientes/FormEditarCliente";
 import { useEffect, useState } from "react";
@@ -84,6 +85,8 @@ export default function Home() {
         <p className="mb-8 text-gray-600">
           Next.js + Supabase
         </p>
+        
+        <ResumoClientes clientes={clientes} />
 
         {clienteEditando ? (
   <FormEditarCliente
