@@ -19,6 +19,34 @@ type Cliente = {
 };
 
 export default function Home() {
+  async function excluirCliente(id: number) {
+  const confirmar = window.confirm(
+    "Tem certeza que deseja excluir este cliente?"
+  );
+
+  if (!confirmar) return;
+
+  const supabase = createClient();
+
+  const { error } = await supabase
+    .from("clientes")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    console.error("Erro ao excluir cliente:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
+
+    setErro(`Erro ao excluir cliente: ${error.message}`);
+    return;
+  }
+
+  carregarClientes();
+}
   const [clienteEditando, setClienteEditando] =
   useState<Cliente | null>(null);
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -131,6 +159,13 @@ export default function Home() {
             </button>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={() => excluirCliente(cliente.id)}
+          className="rounded border border-red-300 px-3 py-1 text-sm text-red-600"
+        >
+          Excluir
+        </button>
       </div>
     ))}
   </div>
