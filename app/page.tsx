@@ -28,6 +28,7 @@ export default function Home() {
 
   const [erro, setErro] = useState("");
   const [busca, setBusca] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState("Todos");
 
   async function carregarClientes() {
     const supabase = createClient();
@@ -36,7 +37,6 @@ export default function Home() {
       .from("clientes")
       .select("*")
       .order("id", { ascending: false });
-
     if (error) {
       console.error("Erro ao carregar clientes:", {
         message: error.message,
@@ -90,11 +90,16 @@ export default function Home() {
   const clientesFiltrados = clientes.filter((cliente) => {
     const termo = busca.toLowerCase().trim();
 
-    return (
+    const correspondeBusca =
       cliente.nome.toLowerCase().includes(termo) ||
       cliente.email?.toLowerCase().includes(termo) ||
-      cliente.empresa?.toLowerCase().includes(termo)
-    );
+      cliente.empresa?.toLowerCase().includes(termo);
+
+    const correspondeStatus =
+      filtroStatus === "Todos" ||
+      cliente.status === filtroStatus;
+
+    return correspondeBusca && correspondeStatus;
   });
 
   return (
@@ -144,13 +149,30 @@ export default function Home() {
               onChange={(e) => setBusca(e.target.value)}
               className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-sm"
             />
-          </div>
 
-          <ListaClientes
-            clientes={clientesFiltrados}
-            onEditar={setClienteEditando}
-            onExcluir={excluirCliente}
-          />
+            <div className="mb-6 flex flex-wrap gap-2">
+              {["Todos", "Ativo", "Prospect", "Inativo"].map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setFiltroStatus(status)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    filtroStatus === status
+                      ? "bg-gray-900 text-white"
+                      : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+
+            <ListaClientes
+              clientes={clientesFiltrados}
+              onEditar={setClienteEditando}
+              onExcluir={excluirCliente}
+            />
+          </div>
         </div>
       </div>
     </main>
