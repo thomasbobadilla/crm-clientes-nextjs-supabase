@@ -80,65 +80,61 @@ export default function Home() {
             Clientes cadastrados
           </h2>
 
-          {clientes.length === 0 ? (
-            <p className="text-gray-500">
-              Nenhum cliente cadastrado.
+{clientes.length === 0 ? (
+  <p className="text-gray-500">
+    Nenhum cliente cadastrado.
+  </p>
+) : (
+  <div className="space-y-3">
+    {clientes.map((cliente) => (
+      <div
+        key={cliente.id}
+        className="rounded border p-4"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="font-semibold">
+              {cliente.nome}
             </p>
-          ) : (
-            <div className="space-y-3">
-              {clientes.map((<div className="flex flex-col items-end gap-3">
-  <span className="rounded bg-gray-100 px-3 py-1 text-sm">
-    {cliente.status}
-  </span>
 
-  <button
-    type="button"
-    onClick={() => setClienteEditando(cliente)}
-    className="rounded border border-gray-300 px-3 py-1 text-sm"
-  >
-    Editar
-  </button>
-</div>) => (
-                <div
-                  key={cliente.id}
-                  className="rounded border p-4"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="font-semibold">
-                        {cliente.nome}
-                      </p>
+            <p className="text-sm text-gray-600">
+              {cliente.email || "E-mail não informado"}
+            </p>
 
-                      <p className="text-sm text-gray-600">
-                        {cliente.email || "E-mail não informado"}
-                      </p>
+            <p className="text-sm text-gray-600">
+              {cliente.telefone || "Telefone não informado"}
+            </p>
 
-                      <p className="text-sm text-gray-600">
-                        {cliente.telefone || "Telefone não informado"}
-                      </p>
+            <p className="text-sm text-gray-600">
+              {cliente.empresa || "Empresa não informada"}
+            </p>
 
-                      <p className="text-sm text-gray-600">
-                        {cliente.empresa || "Empresa não informada"}
-                      </p>
+            {cliente.cidade && (
+              <p className="text-sm text-gray-600">
+                {cliente.cidade}
+                {cliente.estado ? ` - ${cliente.estado}` : ""}
+              </p>
+            )}
+          </div>
 
-                      {cliente.cidade && (
-                        <p className="text-sm text-gray-600">
-                          {cliente.cidade}
-                          {cliente.estado
-                            ? ` - ${cliente.estado}`
-                            : ""}
-                        </p>
-                      )}
-                    </div>
+          <div className="flex flex-col items-end gap-3">
+            <span className="rounded bg-gray-100 px-3 py-1 text-sm">
+              {cliente.status}
+            </span>
 
-                    <span className="rounded bg-gray-100 px-3 py-1 text-sm">
-                      {cliente.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={() => setClienteEditando(cliente)}
+              className="rounded border border-gray-300 px-3 py-1 text-sm"
+            >
+              Editar
+            </button>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
         </div>
       </div>
     </main>
