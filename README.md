@@ -10,6 +10,20 @@ O projeto foi desenvolvido como aplicação prática e também como parte do meu
 
 > O acesso ao CRM é protegido por autenticação. Usuários precisam estar previamente cadastrados para acessar a aplicação.
 
+## 📸 Screenshots
+
+### Login
+
+![Tela de login](docs/images/login.png)
+
+### Dashboard
+
+![Dashboard do CRM](docs/images/dashboard.png)
+
+### Gerenciamento de clientes
+
+![Gerenciamento de clientes](docs/images/clientes.png)
+
 ## 📌 Sobre o projeto
 
 O CRM permite realizar o gerenciamento básico de clientes através de uma interface web integrada ao Supabase.
