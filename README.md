@@ -277,3 +277,9 @@ Além de desenvolver uma aplicação funcional, este projeto tem como objetivo d
 **Thomas Bobadilla**
 
 Projeto desenvolvido para estudo, evolução técnica e composição de portfólio profissional.
+
+## 📫 Contato
+
+- E-mail: thomasbobadila@gmail.com
+- LinkedIn: https://www.linkedin.com/in/tmbobadilla/
+- GitHub: https://github.com/thomasbobadilla
