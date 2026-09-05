@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import BotaoSair from "@/components/auth/BotaoSair";
 import FormCliente from "@/components/clientes/FormCliente";
 import FormEditarCliente from "@/components/clientes/FormEditarCliente";
 import ListaClientes from "@/components/clientes/ListaClientes";
@@ -105,15 +105,19 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-100 p-8">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">
-            CRM de Clientes
-          </h1>
+        <header className="mb-8 flex items-center justify-between gap-4">
+  <div>
+    <h1 className="mb-2 text-3xl font-bold">
+      CRM de Clientes
+    </h1>
 
-          <p className="text-gray-600">
-            Next.js + Supabase
-          </p>
-        </header>
+    <p className="text-gray-600">
+      Next.js + Supabase
+    </p>
+  </div>
+
+  <BotaoSair />
+</header>
 
         <ResumoClientes clientes={clientes} />
 
