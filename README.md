@@ -283,3 +283,5 @@ Projeto desenvolvido para estudo, evolução técnica e composição de portfól
 - E-mail: thomasbobadila@gmail.com
 - LinkedIn: https://www.linkedin.com/in/tmbobadilla/
 - GitHub: https://github.com/thomasbobadilla
+
+<!-- Deploy automático configurado com Vercel -->
