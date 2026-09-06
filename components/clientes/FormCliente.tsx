@@ -10,6 +10,52 @@ type Props = {
 export default function FormCliente({ onClienteCriado }: Props) {
   const supabase = createClient();
 
+  function formatarTelefone(valor: string) {
+  const numeros = valor.replace(/\D/g, "").slice(0, 11);
+
+  if (numeros.length <= 2) {
+    return numeros;
+  }
+
+  if (numeros.length <= 6) {
+    return `(${numeros.slice(0, 2)}) ${numeros.slice(2)}`;
+  }
+
+  if (numeros.length <= 10) {
+    return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 6)}-${numeros.slice(6)}`;
+  }
+
+  return `(${numeros.slice(0, 2)}) ${numeros.slice(2, 7)}-${numeros.slice(7)}`;
+}
+  const estadosBrasil = [
+  "AC",
+  "AL",
+  "AP",
+  "AM",
+  "BA",
+  "CE",
+  "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MT",
+  "MS",
+  "MG",
+  "PA",
+  "PB",
+  "PR",
+  "PE",
+  "PI",
+  "RJ",
+  "RN",
+  "RS",
+  "RO",
+  "RR",
+  "SC",
+  "SP",
+  "SE",
+  "TO",
+];
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
@@ -114,10 +160,13 @@ export default function FormCliente({ onClienteCriado }: Props) {
           </label>
 
           <input
-            type="text"
+            type="tel"
             value={telefone}
-            onChange={(e) => setTelefone(e.target.value)}
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            onChange={(e) => setTelefone(formatarTelefone(e.target.value))}
+            placeholder="(48) 99999-9999"
+            maxLength={15}
+            inputMode="numeric"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
           />
         </div>
 
@@ -162,16 +211,22 @@ export default function FormCliente({ onClienteCriado }: Props) {
 
         <div>
           <label className="mb-1 block text-sm font-medium">
-            Estado
-          </label>
+    Estado
+  </label>
 
-          <input
-            type="text"
-            maxLength={2}
-            value={estado}
-            onChange={(e) => setEstado(e.target.value.toUpperCase())}
-            className="w-full rounded border border-gray-300 px-3 py-2"
-          />
+  <select
+    value={estado}
+    onChange={(e) => setEstado(e.target.value)}
+    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
+  >
+    <option value="">Selecione a UF</option>
+
+    {estadosBrasil.map((uf) => (
+      <option key={uf} value={uf}>
+        {uf}
+      </option>
+    ))}
+  </select>
         </div>
 
         <div>

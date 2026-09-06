@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import BotaoSair from "@/components/auth/BotaoSair";
+import { createClient } from "@/lib/supabase/client";
 import FormCliente from "@/components/clientes/FormCliente";
 import FormEditarCliente from "@/components/clientes/FormEditarCliente";
 import ListaClientes from "@/components/clientes/ListaClientes";
 import ResumoClientes from "@/components/dashboard/ResumoClientes";
-import { createClient } from "@/lib/supabase/client";
+import HeaderCRM from "@/components/layout/HeaderCRM";
 
 type Cliente = {
   id: number;
@@ -105,19 +105,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-100 p-8">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-8 flex items-center justify-between gap-4">
-  <div>
-    <h1 className="mb-2 text-3xl font-bold">
-      CRM de Clientes
-    </h1>
 
-    <p className="text-gray-600">
-      Next.js + Supabase
-    </p>
-  </div>
-
-  <BotaoSair />
-</header>
+        <HeaderCRM />
 
         <ResumoClientes clientes={clientes} />
 
@@ -154,22 +143,67 @@ export default function Home() {
               className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-sm"
             />
 
-            <div className="mb-6 flex flex-wrap gap-2">
-              {["Todos", "Ativo", "Prospect", "Inativo"].map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setFiltroStatus(status)}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                    filtroStatus === status
-                      ? "bg-gray-900 text-white"
-                      : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
+            <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+  <div className="flex flex-col gap-4">
+    <div>
+      <h2 className="text-lg font-semibold text-gray-900">
+        Buscar clientes
+      </h2>
+
+      <p className="mt-1 text-sm text-gray-500">
+        Pesquise por nome, e-mail ou empresa.
+      </p>
+    </div>
+
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex-1">
+        <input
+          type="text"
+          placeholder="Digite nome, e-mail ou empresa..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {["Todos", "Ativo", "Prospect", "Inativo"].map((status) => (
+          <button
+            key={status}
+            type="button"
+            onClick={() => setFiltroStatus(status)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              filtroStatus === status
+                ? "bg-gray-900 text-white shadow-sm"
+                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            {status}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {(busca || filtroStatus !== "Todos") && (
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
+        <p className="text-sm text-gray-500">
+          {clientesFiltrados.length} cliente(s) encontrado(s)
+        </p>
+
+        <button
+          type="button"
+          onClick={() => {
+            setBusca("");
+            setFiltroStatus("Todos");
+          }}
+          className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
+        >
+          Limpar filtros
+        </button>
+      </div>
+    )}
+  </div>
+</div>
 
             <ListaClientes
               clientes={clientesFiltrados}

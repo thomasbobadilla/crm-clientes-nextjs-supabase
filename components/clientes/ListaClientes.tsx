@@ -22,13 +22,13 @@ type Props = {
 function classeStatus(status: string | null) {
   switch (status) {
     case "Ativo":
-      return "bg-green-100 text-green-700";
+      return "bg-green-100 text-green-700 ring-1 ring-green-200";
     case "Prospect":
-      return "bg-blue-100 text-blue-700";
+      return "bg-blue-100 text-blue-700 ring-1 ring-blue-200";
     case "Inativo":
-      return "bg-gray-200 text-gray-700";
+      return "bg-gray-200 text-gray-700 ring-1 ring-gray-300";
     default:
-      return "bg-gray-100 text-gray-600";
+      return "bg-gray-100 text-gray-600 ring-1 ring-gray-200";
   }
 }
 
@@ -39,9 +39,13 @@ export default function ListaClientes({
 }: Props) {
   if (clientes.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
-        <p className="text-gray-500">
+      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-10 text-center">
+        <p className="text-sm font-medium text-gray-600">
           Nenhum cliente encontrado.
+        </p>
+
+        <p className="mt-1 text-sm text-gray-400">
+          Ajuste os filtros ou cadastre um novo cliente.
         </p>
       </div>
     );
@@ -50,14 +54,14 @@ export default function ListaClientes({
   return (
     <div className="space-y-4">
       {clientes.map((cliente) => (
-        <div
+        <article
           key={cliente.id}
-          className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+          className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:border-gray-300 hover:shadow-md"
         >
-          <div className="flex flex-col justify-between gap-5 md:flex-row">
-            <div className="flex-1">
-              <div className="mb-3 flex flex-wrap items-center gap-3">
-                <h3 className="text-lg font-semibold text-gray-900">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <h3 className="text-xl font-semibold text-gray-900">
                   {cliente.nome}
                 </h3>
 
@@ -70,50 +74,83 @@ export default function ListaClientes({
                 </span>
               </div>
 
-              {(cliente.cargo || cliente.empresa) && (
-                <p className="mb-3 text-sm text-gray-600">
-                  {cliente.cargo || "Cargo não informado"}
-                  {cliente.empresa
-                    ? ` • ${cliente.empresa}`
-                    : ""}
-                </p>
-              )}
-
-              <div className="grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
-                <p>
-                  <span className="font-medium text-gray-700">
-                    E-mail:
-                  </span>{" "}
-                  {cliente.email || "Não informado"}
-                </p>
-
-                <p>
-                  <span className="font-medium text-gray-700">
-                    Telefone:
-                  </span>{" "}
-                  {cliente.telefone || "Não informado"}
-                </p>
-
-                <p>
-                  <span className="font-medium text-gray-700">
-                    Localização:
-                  </span>{" "}
-                  {cliente.cidade
-                    ? `${cliente.cidade}${
-                        cliente.estado
-                          ? ` - ${cliente.estado}`
-                          : ""
-                      }`
-                    : "Não informada"}
-                </p>
+              <div className="mb-4">
+                {(cliente.cargo || cliente.empresa) && (
+                  <p className="text-sm font-medium text-gray-700">
+                    {cliente.cargo || "Cargo não informado"}
+                    {cliente.empresa
+                      ? ` • ${cliente.empresa}`
+                      : ""}
+                  </p>
+                )}
               </div>
+
+              <div className="grid gap-3 text-sm sm:grid-cols-2">
+                <div className="rounded-lg bg-gray-50 p-3">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    E-mail
+                  </p>
+
+                  <p className="break-all text-gray-700">
+                    {cliente.email || "Não informado"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg bg-gray-50 p-3">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Telefone
+                  </p>
+
+                  <p className="text-gray-700">
+                    {cliente.telefone || "Não informado"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg bg-gray-50 p-3">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Localização
+                  </p>
+
+                  <p className="text-gray-700">
+                    {cliente.cidade
+                      ? `${cliente.cidade}${
+                          cliente.estado
+                            ? ` - ${cliente.estado}`
+                            : ""
+                        }`
+                      : "Não informada"}
+                  </p>
+                </div>
+
+                <div className="rounded-lg bg-gray-50 p-3">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Empresa
+                  </p>
+
+                  <p className="text-gray-700">
+                    {cliente.empresa || "Não informada"}
+                  </p>
+                </div>
+              </div>
+
+              {cliente.observacoes && (
+                <div className="mt-4 rounded-lg border border-gray-100 bg-gray-50 p-3">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Observações
+                  </p>
+
+                  <p className="text-sm leading-relaxed text-gray-600">
+                    {cliente.observacoes}
+                  </p>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-start gap-2 md:flex-col">
+            <div className="flex gap-2 lg:flex-col lg:items-stretch">
               <button
                 type="button"
                 onClick={() => onEditar(cliente)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
               >
                 Editar
               </button>
@@ -121,13 +158,13 @@ export default function ListaClientes({
               <button
                 type="button"
                 onClick={() => onExcluir(cliente.id)}
-                className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
               >
                 Excluir
               </button>
             </div>
           </div>
-        </div>
+        </article>
       ))}
     </div>
   );
