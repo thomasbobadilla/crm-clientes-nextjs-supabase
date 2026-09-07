@@ -17,6 +17,7 @@ type Props = {
   clientes: Cliente[];
   onEditar: (cliente: Cliente) => void;
   onExcluir: (id: number) => void;
+  onAbrirHistorico: (cliente: Cliente) => void;
 };
 
 function classeStatus(status: string | null) {
@@ -36,6 +37,7 @@ export default function ListaClientes({
   clientes,
   onEditar,
   onExcluir,
+  onAbrirHistorico,
 }: Props) {
   if (clientes.length === 0) {
     return (
@@ -148,6 +150,14 @@ export default function ListaClientes({
 
             <div className="flex gap-2 lg:flex-col lg:items-stretch">
               <button
+                type="button"
+                onClick={() => onAbrirHistorico(cliente)}
+                className="rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+              >
+                Histórico
+              </button>
+
+              <button 
                 type="button"
                 onClick={() => onEditar(cliente)}
                 className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"

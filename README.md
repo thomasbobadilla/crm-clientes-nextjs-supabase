@@ -272,6 +272,8 @@ Além de desenvolver uma aplicação funcional, este projeto tem como objetivo d
 - Git e GitHub;
 - deploy e ambiente de produção.
 
+<!-- Deploy automático configurado com Vercel -->
+
 ## 👨‍💻 Autor
 
 **Thomas Bobadilla**
@@ -283,5 +285,3 @@ Projeto desenvolvido para estudo, evolução técnica e composição de portfól
 - E-mail: thomasbobadila@gmail.com
 - LinkedIn: https://www.linkedin.com/in/tmbobadilla/
 - GitHub: https://github.com/thomasbobadilla
-
-<!-- Deploy automático configurado com Vercel -->
