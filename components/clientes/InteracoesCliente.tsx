@@ -17,6 +17,8 @@ type Interacao = {
   data_interacao: string;
   criado_em: string;
   proximo_contato: string | null;
+  concluido: boolean;
+  concluido_em: string | null;
 };
 
 const tiposInteracao = [
@@ -83,6 +85,7 @@ export default function InteracoesCliente({
 
   const [tipo, setTipo] = useState("Ligação");
   const [descricao, setDescricao] = useState("");
+
   const [dataInteracao, setDataInteracao] =
     useState(obterDataHoraAtual());
 
@@ -160,9 +163,8 @@ export default function InteracoesCliente({
 
     const supabase = createClient();
 
-    const dataInteracaoISO = new Date(
-      dataInteracao
-    ).toISOString();
+    const dataInteracaoISO =
+      new Date(dataInteracao).toISOString();
 
     const proximoContatoISO =
       agendarProximoContato && proximoContato
@@ -294,6 +296,42 @@ export default function InteracoesCliente({
     await onInteracoesAlteradas?.();
   }
 
+  async function concluirAcompanhamento(id: number) {
+    const confirmar = window.confirm(
+      "Confirma que este acompanhamento foi concluído?"
+    );
+
+    if (!confirmar) return;
+
+    setErro("");
+
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("interacoes")
+      .update({
+        concluido: true,
+        concluido_em: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) {
+      console.error(
+        "Erro ao concluir acompanhamento:",
+        error
+      );
+
+      setErro(
+        "Não foi possível concluir o acompanhamento."
+      );
+
+      return;
+    }
+
+    await carregarInteracoes();
+    await onInteracoesAlteradas?.();
+  }
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-6">
@@ -330,11 +368,16 @@ export default function InteracoesCliente({
 
             <select
               value={tipo}
-              onChange={(e) => setTipo(e.target.value)}
+              onChange={(e) =>
+                setTipo(e.target.value)
+              }
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
             >
               {tiposInteracao.map((item) => (
-                <option key={item} value={item}>
+                <option
+                  key={item}
+                  value={item}
+                >
                   {item}
                 </option>
               ))}
@@ -380,9 +423,12 @@ export default function InteracoesCliente({
               type="checkbox"
               checked={agendarProximoContato}
               onChange={(e) => {
-                const marcado = e.target.checked;
+                const marcado =
+                  e.target.checked;
 
-                setAgendarProximoContato(marcado);
+                setAgendarProximoContato(
+                  marcado
+                );
 
                 if (!marcado) {
                   setProximoContato("");
@@ -406,7 +452,9 @@ export default function InteracoesCliente({
                 type="datetime-local"
                 value={proximoContato}
                 onChange={(e) =>
-                  setProximoContato(e.target.value)
+                  setProximoContato(
+                    e.target.value
+                  )
                 }
                 required
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
@@ -463,9 +511,13 @@ export default function InteracoesCliente({
           <div className="space-y-6">
             {interacoes.map((interacao) => {
               const contatoAtrasado =
-                interacao.proximo_contato &&
-                new Date(interacao.proximo_contato) <
-                  new Date();
+                Boolean(
+                  interacao.proximo_contato
+                ) &&
+                !interacao.concluido &&
+                new Date(
+                  interacao.proximo_contato!
+                ) < new Date();
 
               return (
                 <div
@@ -491,8 +543,10 @@ export default function InteracoesCliente({
                           ).toLocaleString(
                             "pt-BR",
                             {
-                              dateStyle: "short",
-                              timeStyle: "short",
+                              dateStyle:
+                                "short",
+                              timeStyle:
+                                "short",
                             }
                           )}
                         </span>
@@ -530,27 +584,72 @@ export default function InteracoesCliente({
                     </p>
 
                     {interacao.proximo_contato && (
-                      <div
-                        className={`mt-4 rounded-lg border px-3 py-2.5 text-sm ${
-                          contatoAtrasado
-                            ? "border-red-200 bg-red-50 text-red-700"
-                            : "border-blue-200 bg-blue-50 text-blue-700"
-                        }`}
-                      >
-                        <span className="font-semibold">
-                          {contatoAtrasado
-                            ? "Acompanhamento atrasado:"
-                            : "Próximo contato:"}
-                        </span>{" "}
+                      <div className="mt-4">
+                        {interacao.concluido ? (
+                          <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2.5 text-sm text-green-700">
+                            <span className="font-semibold">
+                              Acompanhamento concluído
+                            </span>
 
-                        {new Date(
-                          interacao.proximo_contato
-                        ).toLocaleString(
-                          "pt-BR",
-                          {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          }
+                            {interacao.concluido_em && (
+                              <>
+                                {" em "}
+                                {new Date(
+                                  interacao.concluido_em
+                                ).toLocaleString(
+                                  "pt-BR",
+                                  {
+                                    dateStyle:
+                                      "short",
+                                    timeStyle:
+                                      "short",
+                                  }
+                                )}
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <>
+                            <div
+                              className={`rounded-lg border px-3 py-2.5 text-sm ${
+                                contatoAtrasado
+                                  ? "border-red-200 bg-red-50 text-red-700"
+                                  : "border-blue-200 bg-blue-50 text-blue-700"
+                              }`}
+                            >
+                              <span className="font-semibold">
+                                {contatoAtrasado
+                                  ? "Acompanhamento atrasado:"
+                                  : "Próximo contato:"}
+                              </span>{" "}
+
+                              {new Date(
+                                interacao.proximo_contato
+                              ).toLocaleString(
+                                "pt-BR",
+                                {
+                                  dateStyle:
+                                    "short",
+                                  timeStyle:
+                                    "short",
+                                }
+                              )}
+                            </div>
+
+                            <div className="mt-3 flex justify-end">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  concluirAcompanhamento(
+                                    interacao.id
+                                  )
+                                }
+                                className="rounded-lg border border-green-300 bg-white px-4 py-2 text-xs font-semibold text-green-700 transition hover:bg-green-50"
+                              >
+                                Concluir acompanhamento
+                              </button>
+                            </div>
+                          </>
                         )}
                       </div>
                     )}
