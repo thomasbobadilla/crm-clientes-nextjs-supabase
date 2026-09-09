@@ -32,19 +32,21 @@ A aplicação implementa operações CRUD completas, autenticação de usuários
 
 ## ✨ Funcionalidades
 
-- 🔐 Autenticação de usuários
-- 🛡️ Proteção de rotas
-- 🚪 Login e logout
-- ➕ Cadastro de clientes
-- ✏️ Edição de clientes
-- 🗑️ Exclusão de clientes
-- 📋 Listagem de clientes
-- 🔎 Busca por nome, e-mail ou empresa
-- 🎯 Filtros por status
-- 📊 Cards com resumo dos clientes
-- 🔄 Atualização automática da listagem após operações
-- 🔒 Controle de acesso ao banco utilizando RLS
-- ☁️ Deploy automático integrado ao GitHub
+- Autenticação de usuários
+- Cadastro, edição e exclusão de clientes
+- Busca e filtros por status
+- Dashboard com indicadores de clientes
+- Histórico de interações por cliente
+- Timeline de interações
+- Tipos de interação: ligação, e-mail, reunião, WhatsApp, proposta e outros
+- Agendamento de próximo contato
+- Identificação automática de acompanhamentos atrasados
+- Conclusão de acompanhamentos
+- Dashboard de próximos contatos e atrasos
+- Indicadores comerciais
+- Interações por tipo
+- Interações nos últimos 7 dias
+- Atualização automática dos dashboards
 
 ## 🛠️ Tecnologias utilizadas
 
@@ -256,6 +258,15 @@ Possíveis evoluções do projeto:
 - [ ] Exportação de dados
 - [ ] Melhorias de responsividade
 - [ ] Testes automatizados
+
+### V3
+- API REST para integração com sistemas externos
+- Webhooks
+- Exportação de relatórios em PDF
+- Exportação para XLSX
+- Exportação para CSV
+- Relatórios por cliente, período, status e interação
+- Melhorias de segurança e preparação para ambiente corporativo
 
 ## 🎯 Objetivo do projeto
 

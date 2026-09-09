@@ -148,30 +148,30 @@ export default function ListaClientes({
               )}
             </div>
 
-            <div className="flex gap-2 lg:flex-col lg:items-stretch">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               <button
-                type="button"
-                onClick={() => onAbrirHistorico(cliente)}
-                className="rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
+              type="button"
+              onClick={() => onAbrirHistorico(cliente)}
+              className="w-full rounded-lg border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 sm:w-auto"
               >
                 Histórico
               </button>
 
-              <button 
-                type="button"
-                onClick={() => onEditar(cliente)}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-              >
-                Editar
-              </button>
-
               <button
-                type="button"
-                onClick={() => onExcluir(cliente.id)}
-                className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
-              >
-                Excluir
-              </button>
+              type="button"
+              onClick={() => onEditar(cliente)}
+              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 sm:w-auto"
+            >
+              Editar
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onExcluir(cliente.id)}
+              className="w-full rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 sm:w-auto"
+            >
+              Excluir
+            </button>
             </div>
           </div>
         </article>

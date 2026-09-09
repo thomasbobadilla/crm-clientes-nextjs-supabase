@@ -24,8 +24,13 @@ export async function proxy(request: NextRequest) {
             request,
           });
 
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+          cookiesToSet.forEach(
+            ({ name, value, options }) =>
+              response.cookies.set(
+                name,
+                value,
+                options
+              )
           );
         },
       },
@@ -36,17 +41,33 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const estaNoLogin = request.nextUrl.pathname.startsWith("/login");
+  const pathname = request.nextUrl.pathname;
 
-  if (!user && !estaNoLogin) {
+  const rotasPublicas = [
+    "/login",
+    "/recuperar-senha",
+    "/redefinir-senha",
+    "/auth/callback",
+  ];
+
+  const estaEmRotaPublica =
+    rotasPublicas.some(
+      (rota) =>
+        pathname === rota ||
+        pathname.startsWith(`${rota}/`)
+    );
+
+  if (!user && !estaEmRotaPublica) {
     const url = request.nextUrl.clone();
+
     url.pathname = "/login";
 
     return NextResponse.redirect(url);
   }
 
-  if (user && estaNoLogin) {
+  if (user && pathname === "/login") {
     const url = request.nextUrl.clone();
+
     url.pathname = "/";
 
     return NextResponse.redirect(url);

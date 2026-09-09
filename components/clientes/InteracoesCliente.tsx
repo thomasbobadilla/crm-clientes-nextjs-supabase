@@ -349,9 +349,9 @@ export default function InteracoesCliente({
       </div>
 
       <form
-        onSubmit={salvarInteracao}
-        className="mb-8 rounded-xl bg-gray-50 p-4"
-      >
+              onSubmit={salvarInteracao}
+              className="mx-auto w-full max-w-xl"
+>
         <div className="mb-4">
           <h3 className="text-sm font-semibold text-gray-800">
             {interacaoEditando
@@ -360,7 +360,7 @@ export default function InteracoesCliente({
           </h3>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[180px_220px_1fr]">
+        <div className="mx-auto w-full max-w-full rounded-xl bg-gray-50 p-4 sm:p-6">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
               Tipo
@@ -371,7 +371,7 @@ export default function InteracoesCliente({
               onChange={(e) =>
                 setTipo(e.target.value)
               }
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+              className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2"
             >
               {tiposInteracao.map((item) => (
                 <option
@@ -396,7 +396,7 @@ export default function InteracoesCliente({
                 setDataInteracao(e.target.value)
               }
               required
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5"
+              className="w-full min-w-0 rounded-lg border border-gray-300 px-3 py-2"
             />
           </div>
 
@@ -552,7 +552,7 @@ export default function InteracoesCliente({
                         </span>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button
                           type="button"
                           onClick={() =>
