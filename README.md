@@ -247,16 +247,18 @@ Durante o desenvolvimento foram testados:
 
 Possíveis evoluções do projeto:
 
-- [ ] Recuperação de senha
+## 🗺️ Roadmap
+
+- [x] Recuperação de senha
 - [ ] Cadastro e gerenciamento de usuários
-- [ ] Paginação de clientes
-- [ ] Ordenação das listagens
-- [ ] Dashboard com novos indicadores
-- [ ] Histórico de interações com clientes
+- [x] Paginação de clientes
+- [x] Ordenação das listagens
+- [x] Dashboard com novos indicadores
+- [x] Histórico de interações com clientes
 - [ ] Funil comercial
 - [ ] Registro de oportunidades
 - [ ] Exportação de dados
-- [ ] Melhorias de responsividade
+- [x] Melhorias de responsividade
 - [ ] Testes automatizados
 
 ### V3
@@ -284,6 +286,14 @@ Além de desenvolver uma aplicação funcional, este projeto tem como objetivo d
 - deploy e ambiente de produção.
 
 <!-- Deploy automático configurado com Vercel -->
+
+## API REST
+
+A V3 inclui uma API REST para integração com clientes e interações.
+
+A V3 inclui uma API REST para gerenciamento e integração de clientes e interações comerciais.
+
+📖 [Documentação completa da API](docs/API.md)
 
 ## 👨‍💻 Autor
 

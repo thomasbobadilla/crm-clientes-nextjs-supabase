@@ -57,6 +57,21 @@ export async function proxy(request: NextRequest) {
         pathname.startsWith(`${rota}/`)
     );
 
+  const ehRotaApi =
+    pathname.startsWith("/api/");
+
+  if (!user && ehRotaApi) {
+    return NextResponse.json(
+      {
+        sucesso: false,
+        erro: "Não autorizado.",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
+
   if (!user && !estaEmRotaPublica) {
     const url = request.nextUrl.clone();
 

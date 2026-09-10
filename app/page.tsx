@@ -16,6 +16,11 @@ import GraficoInteracoes7Dias from "@/components/dashboard/GraficoInteracoes7Dia
 
 import HeaderCRM from "@/components/layout/HeaderCRM";
 import InteracoesCliente from "@/components/clientes/InteracoesCliente";
+import FooterCRM from "@/components/layout/FooterCRM";
+
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type Cliente = {
   id: number;
@@ -422,6 +427,288 @@ export default function Home() {
     abrirHistorico(cliente);
   }
 
+  function exportarClientesCSV() {
+    if (clientesOrdenados.length === 0) {
+      window.alert(
+        "Não há clientes para exportar com os filtros atuais."
+      );
+      return;
+    }
+
+    const cabecalho = [
+      "ID",
+      "Nome",
+      "E-mail",
+      "Telefone",
+      "Empresa",
+      "Cargo",
+      "Cidade",
+      "Estado",
+      "Status",
+      "Observações",
+    ];
+
+    function escaparCSV(
+      valor: string | number | null
+    ) {
+      const texto =
+        valor === null || valor === undefined
+          ? ""
+          : String(valor);
+
+      return `"${texto.replace(/"/g, '""')}"`;
+    }
+
+    const linhas = clientesOrdenados.map(
+      (cliente) => [
+        cliente.id,
+        cliente.nome,
+        cliente.email,
+        cliente.telefone,
+        cliente.empresa,
+        cliente.cargo,
+        cliente.cidade,
+        cliente.estado,
+        cliente.status,
+        cliente.observacoes,
+      ]
+    );
+
+    const conteudoCSV = [
+      cabecalho.map(escaparCSV).join(";"),
+      ...linhas.map((linha) =>
+        linha.map(escaparCSV).join(";")
+      ),
+    ].join("\r\n");
+
+    const blob = new Blob(
+      ["\uFEFF" + conteudoCSV],
+      {
+        type: "text/csv;charset=utf-8;",
+      }
+    );
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    const dataAtual = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    link.href = url;
+    link.download = `clientes-crm-${dataAtual}.csv`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  }
+
+  function exportarClientesExcel() {
+    if (clientesOrdenados.length === 0) {
+      window.alert(
+        "Não há clientes para exportar com os filtros atuais."
+      );
+      return;
+    }
+
+    const dadosExcel = clientesOrdenados.map(
+      (cliente) => ({
+        ID: cliente.id,
+        Nome: cliente.nome,
+        "E-mail": cliente.email ?? "",
+        Telefone: cliente.telefone ?? "",
+        Empresa: cliente.empresa ?? "",
+        Cargo: cliente.cargo ?? "",
+        Cidade: cliente.cidade ?? "",
+        Estado: cliente.estado ?? "",
+        Status: cliente.status ?? "",
+        Observações: cliente.observacoes ?? "",
+      })
+    );
+
+    const planilha =
+      XLSX.utils.json_to_sheet(dadosExcel);
+
+    planilha["!autofilter"] = {
+      ref: planilha["!ref"] ?? "A1:J1",
+    };
+
+    planilha["!cols"] = [
+      { wch: 8 },
+      { wch: 28 },
+      { wch: 32 },
+      { wch: 20 },
+      { wch: 28 },
+      { wch: 22 },
+      { wch: 22 },
+      { wch: 10 },
+      { wch: 14 },
+      { wch: 45 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      planilha,
+      "Clientes"
+    );
+
+    const dataAtual = new Date()
+      .toISOString()
+      .slice(0, 10);
+
+    XLSX.writeFile(
+      workbook,
+      `clientes-crm-${dataAtual}.xlsx`
+    );
+  }
+
+  function exportarClientesPDF() {
+  if (clientesOrdenados.length === 0) {
+    window.alert(
+      "Não há clientes para exportar com os filtros atuais."
+    );
+    return;
+  }
+
+  const documento = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4",
+  });
+
+  const dataGeracao = new Date().toLocaleString(
+    "pt-BR"
+  );
+
+  documento.setFontSize(18);
+  documento.text("CRM de Clientes", 14, 16);
+
+  documento.setFontSize(11);
+  documento.text(
+    "Relatório de clientes",
+    14,
+    23
+  );
+
+  documento.setFontSize(9);
+  documento.text(
+    `Gerado em: ${dataGeracao}`,
+    14,
+    30
+  );
+
+  documento.text(
+    `Total de clientes: ${clientesOrdenados.length}`,
+    14,
+    35
+  );
+
+  documento.text(
+    `Filtro de status: ${
+      filtroStatus === "Todos"
+        ? "Todos"
+        : filtroStatus
+    }`,
+    14,
+    40
+  );
+
+  const dadosTabela = clientesOrdenados.map(
+    (cliente) => [
+      cliente.id,
+      cliente.nome,
+      cliente.email ?? "",
+      cliente.telefone ?? "",
+      cliente.empresa ?? "",
+      cliente.cidade ?? "",
+      cliente.estado ?? "",
+      cliente.status ?? "",
+    ]
+  );
+
+  autoTable(documento, {
+    startY: 47,
+
+    head: [
+      [
+        "ID",
+        "Nome",
+        "E-mail",
+        "Telefone",
+        "Empresa",
+        "Cidade",
+        "UF",
+        "Status",
+      ],
+    ],
+
+    body: dadosTabela,
+
+    styles: {
+      fontSize: 8,
+      cellPadding: 2,
+      overflow: "linebreak",
+    },
+
+    headStyles: {
+      fontStyle: "bold",
+    },
+
+    columnStyles: {
+      0: { cellWidth: 12 },
+      1: { cellWidth: 38 },
+      2: { cellWidth: 48 },
+      3: { cellWidth: 32 },
+      4: { cellWidth: 42 },
+      5: { cellWidth: 35 },
+      6: { cellWidth: 12 },
+      7: { cellWidth: 24 },
+    },
+
+    margin: {
+      left: 14,
+      right: 14,
+    },
+  });
+
+  const quantidadePaginas =
+    documento.getNumberOfPages();
+
+  for (
+    let pagina = 1;
+    pagina <= quantidadePaginas;
+    pagina++
+  ) {
+    documento.setPage(pagina);
+
+    documento.setFontSize(8);
+
+    documento.text(
+      `CRM de Clientes · v2.0.0 · Página ${pagina} de ${quantidadePaginas}`,
+      148,
+      202,
+      {
+        align: "center",
+      }
+    );
+  }
+
+  const dataArquivo = new Date()
+    .toISOString()
+    .slice(0, 10);
+
+  documento.save(
+    `clientes-crm-${dataArquivo}.pdf`
+  );
+}
+
   useEffect(() => {
     carregarClientes();
     carregarAcompanhamentos();
@@ -585,12 +872,39 @@ export default function Home() {
             }
           />
         )}
+      </div>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <h2 className="text-xl font-semibold">
+    Clientes cadastrados
+  </h2>
 
-        <div className="rounded-lg bg-white p-6 shadow">
-          <div className="mb-6">
-            <h2 className="mb-4 text-xl font-semibold">
-              Clientes cadastrados
-            </h2>
+  <div className="flex flex-wrap gap-2">
+    <button
+      type="button"
+      onClick={exportarClientesCSV}
+      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+    >
+      Exportar CSV
+    </button>
+
+    <button
+      type="button"
+      onClick={exportarClientesExcel}
+      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+    >
+      Exportar Excel
+    </button>
+
+    <button
+      type="button"
+      onClick={exportarClientesPDF}
+      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+    >
+      Exportar PDF
+    </button>
+
+  </div>
+</div>
 
             <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="flex flex-col gap-4">
@@ -808,7 +1122,7 @@ export default function Home() {
                       disabled={
                         paginaAtual === 1
                       }
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
                     >
                       Anterior
                     </button>
@@ -839,7 +1153,7 @@ export default function Home() {
                         paginaAtual ===
                         totalPaginas
                       }
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
                     >
                       Próxima
                     </button>
@@ -847,10 +1161,9 @@ export default function Home() {
                 </div>
               </div>
             )}
-          </div>
+
+          <FooterCRM />
         </div>
-      </div>
-    </div>
-    </main>
-  );
+      </main>
+      );
 }
