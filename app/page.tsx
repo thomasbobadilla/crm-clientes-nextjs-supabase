@@ -10,6 +10,7 @@ import ListaClientes from "@/components/clientes/ListaClientes";
 import ClientesPorStatus from "@/components/dashboard/ClientesPorStatus";
 import ClientesSemInteracao from "@/components/dashboard/ClientesSemInteracao";
 import RankingClientes from "@/components/dashboard/RankingClientes";
+import ClientesPorEstado from "@/components/dashboard/ClientesPorEstado";
 
 import ResumoClientes from "@/components/dashboard/ResumoClientes";
 import AcompanhamentosDashboard from "@/components/dashboard/AcompanhamentosDashboard";
@@ -1009,7 +1010,13 @@ async function carregarRankingClientes() {
 
         <ResumoClientes clientes={clientes} />
 
-        <ClientesPorStatus clientes={clientes} />
+        <ClientesPorStatus
+          clientes={clientes}
+        />
+
+        <ClientesPorEstado
+          clientes={clientes}
+        />
 
         <IndicadoresComerciais
           totalInteracoes={totalInteracoes}
