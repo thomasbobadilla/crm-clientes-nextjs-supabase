@@ -7,12 +7,16 @@ import { createClient } from "@/lib/supabase/client";
 import FormCliente from "@/components/clientes/FormCliente";
 import FormEditarCliente from "@/components/clientes/FormEditarCliente";
 import ListaClientes from "@/components/clientes/ListaClientes";
+import ClientesPorStatus from "@/components/dashboard/ClientesPorStatus";
+import ClientesSemInteracao from "@/components/dashboard/ClientesSemInteracao";
+import RankingClientes from "@/components/dashboard/RankingClientes";
 
 import ResumoClientes from "@/components/dashboard/ResumoClientes";
 import AcompanhamentosDashboard from "@/components/dashboard/AcompanhamentosDashboard";
 import IndicadoresComerciais from "@/components/dashboard/IndicadoresComerciais";
 import InteracoesPorTipo from "@/components/dashboard/InteracoesPorTipo";
 import GraficoInteracoes7Dias from "@/components/dashboard/GraficoInteracoes7Dias";
+
 
 import HeaderCRM from "@/components/layout/HeaderCRM";
 import InteracoesCliente from "@/components/clientes/InteracoesCliente";
@@ -21,6 +25,7 @@ import FooterCRM from "@/components/layout/FooterCRM";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
 
 type Cliente = {
   id: number;
@@ -72,6 +77,17 @@ export default function Home() {
     { data: string; quantidade: number }[]
   >([]);
 
+  const [
+  rankingClientes,
+  setRankingClientes,
+] = useState<
+  {
+    id: number;
+    nome: string;
+    quantidade: number;
+  }[]
+>([]);
+
   const [interacoesPorTipo, setInteracoesPorTipo] =
     useState([
       { tipo: "Ligação", quantidade: 0 },
@@ -103,6 +119,21 @@ export default function Home() {
 
   const historicoRef =
     useRef<HTMLDivElement | null>(null);
+  
+  const formularioClienteRef =
+    useRef<HTMLDivElement | null>(null);
+
+  const [
+  clientesSemInteracao,
+  setClientesSemInteracao,
+] = useState<
+  {
+    id: number;
+    nome: string;
+    ultimaInteracao: string | null;
+    diasSemInteracao: number | null;
+  }[]
+>([]);  
 
   async function carregarClientes() {
     const supabase = createClient();
@@ -398,6 +429,88 @@ export default function Home() {
     ]);
   }
 
+  async function carregarClientesSemInteracao() {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("interacoes")
+    .select("cliente_id, data_interacao")
+    .order("data_interacao", {
+      ascending: false,
+    });
+
+  if (error) {
+    console.error(
+      "Erro ao carregar clientes sem interação:",
+      error
+    );
+    return;
+  }
+
+  const ultimaInteracaoPorCliente = new Map<
+    number,
+    string
+  >();
+
+  (data ?? []).forEach((interacao) => {
+    if (
+      !ultimaInteracaoPorCliente.has(
+        interacao.cliente_id
+      )
+    ) {
+      ultimaInteracaoPorCliente.set(
+        interacao.cliente_id,
+        interacao.data_interacao
+      );
+    }
+  });
+
+  const agora = new Date();
+
+  const resultado = clientes
+    .map((cliente) => {
+      const ultimaInteracao =
+        ultimaInteracaoPorCliente.get(
+          cliente.id
+        ) ?? null;
+
+      if (!ultimaInteracao) {
+        return {
+          id: cliente.id,
+          nome: cliente.nome,
+          ultimaInteracao: null,
+          diasSemInteracao: null,
+        };
+      }
+
+      const diferenca =
+        agora.getTime() -
+        new Date(
+          ultimaInteracao
+        ).getTime();
+
+      const diasSemInteracao =
+        Math.floor(
+          diferenca /
+            (1000 * 60 * 60 * 24)
+        );
+
+      return {
+        id: cliente.id,
+        nome: cliente.nome,
+        ultimaInteracao,
+        diasSemInteracao,
+      };
+    })
+    .filter(
+      (cliente) =>
+        cliente.ultimaInteracao === null ||
+        (cliente.diasSemInteracao ?? 0) >= 30
+    );
+
+  setClientesSemInteracao(resultado);
+}
+
   function abrirHistorico(cliente: Cliente) {
     setClienteHistorico(cliente);
 
@@ -426,6 +539,17 @@ export default function Home() {
 
     abrirHistorico(cliente);
   }
+
+  function editarCliente(cliente: Cliente) {
+  setClienteEditando(cliente);
+
+  setTimeout(() => {
+    formularioClienteRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }, 100);
+}
 
   function exportarClientesCSV() {
     if (clientesOrdenados.length === 0) {
@@ -709,13 +833,84 @@ export default function Home() {
   );
 }
 
+async function carregarRankingClientes() {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from("interacoes")
+    .select(`
+      cliente_id,
+      clientes (
+        id,
+        nome
+      )
+    `);
+
+  if (error) {
+    console.error(
+      "Erro ao carregar ranking de clientes:",
+      error
+    );
+    return;
+  }
+
+  const mapa = new Map<
+    number,
+    {
+      id: number;
+      nome: string;
+      quantidade: number;
+    }
+  >();
+
+  (data ?? []).forEach((item) => {
+    const cliente = Array.isArray(item.clientes)
+      ? item.clientes[0] ?? null
+      : item.clientes ?? null;
+
+    if (!cliente) {
+      return;
+    }
+
+    const existente = mapa.get(cliente.id);
+
+    if (existente) {
+      existente.quantidade += 1;
+    } else {
+      mapa.set(cliente.id, {
+        id: cliente.id,
+        nome: cliente.nome,
+        quantidade: 1,
+      });
+    }
+  });
+
+  const ranking = Array.from(
+    mapa.values()
+  )
+    .sort(
+      (a, b) =>
+        b.quantidade - a.quantidade
+    )
+    .slice(0, 5);
+
+  setRankingClientes(ranking);
+}
+
   useEffect(() => {
     carregarClientes();
     carregarAcompanhamentos();
     carregarIndicadoresComerciais();
     carregarInteracoesPorTipo();
     carregarInteracoesPorDia();
+    carregarRankingClientes();
   }, []);
+
+  useEffect(() => {
+  if (clientes.length > 0) {
+    carregarClientesSemInteracao();
+  }
+}, [clientes]);
 
   const clientesFiltrados =
     clientes.filter((cliente) => {
@@ -812,40 +1007,34 @@ export default function Home() {
       <div className="mx-auto max-w-5xl">
         <HeaderCRM />
 
-        <ResumoClientes
-          clientes={clientes}
-        />
+        <ResumoClientes clientes={clientes} />
+
+        <ClientesPorStatus clientes={clientes} />
 
         <IndicadoresComerciais
-          totalInteracoes={
-            totalInteracoes
-          }
-          acompanhamentosPendentes={
-            acompanhamentos.length
-          }
-          acompanhamentosConcluidos={
-            acompanhamentosConcluidos
-          }
-          interacoesUltimos7Dias={
-            interacoesUltimos7Dias
-          }
+          totalInteracoes={totalInteracoes}
+          acompanhamentosPendentes={acompanhamentos.length}
+          acompanhamentosConcluidos={acompanhamentosConcluidos}
+          interacoesUltimos7Dias={interacoesUltimos7Dias}
         />
 
-        <InteracoesPorTipo
-          dados={interacoesPorTipo}
-        />
+        <InteracoesPorTipo dados={interacoesPorTipo} />
 
-        <GraficoInteracoes7Dias
-          dados={interacoesPorDia}
-        />
+        <GraficoInteracoes7Dias dados={interacoesPorDia} />
 
         <AcompanhamentosDashboard
-          acompanhamentos={
-            acompanhamentos
-          }
-          onAbrirCliente={
-            abrirHistoricoPorId
-          }
+          acompanhamentos={acompanhamentos}
+          onAbrirCliente={abrirHistoricoPorId}
+        />
+
+        <ClientesSemInteracao
+          clientes={clientesSemInteracao}
+          onAbrirCliente={abrirHistoricoPorId}
+        />
+
+        <RankingClientes
+          clientes={rankingClientes}
+          onAbrirCliente={abrirHistoricoPorId}
         />
 
         {erro && (
@@ -854,316 +1043,221 @@ export default function Home() {
           </div>
         )}
 
-        {clienteEditando ? (
-          <FormEditarCliente
-            cliente={clienteEditando}
-            onAtualizado={() => {
-              setClienteEditando(null);
-              carregarClientes();
-            }}
-            onCancelar={() =>
-              setClienteEditando(null)
-            }
-          />
-        ) : (
-          <FormCliente
-            onClienteCriado={
-              carregarClientes
-            }
-          />
-        )}
-      </div>
+        <div ref={formularioClienteRef} className="scroll-mt-6">
+          {clienteEditando ? (
+            <FormEditarCliente
+              cliente={clienteEditando}
+              onAtualizado={() => {
+                setClienteEditando(null);
+                carregarClientes();
+              }}
+              onCancelar={() => setClienteEditando(null)}
+            />
+          ) : (
+            <FormCliente onClienteCriado={carregarClientes} />
+          )}
+        </div>
+
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-  <h2 className="text-xl font-semibold">
-    Clientes cadastrados
-  </h2>
+          <h2 className="text-xl font-semibold">Clientes cadastrados</h2>
 
-  <div className="flex flex-wrap gap-2">
-    <button
-      type="button"
-      onClick={exportarClientesCSV}
-      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-    >
-      Exportar CSV
-    </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={exportarClientesCSV}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+            >
+              Exportar CSV
+            </button>
 
-    <button
-      type="button"
-      onClick={exportarClientesExcel}
-      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-    >
-      Exportar Excel
-    </button>
+            <button
+              type="button"
+              onClick={exportarClientesExcel}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+            >
+              Exportar Excel
+            </button>
 
-    <button
-      type="button"
-      onClick={exportarClientesPDF}
-      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-    >
-      Exportar PDF
-    </button>
+            <button
+              type="button"
+              onClick={exportarClientesPDF}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+            >
+              Exportar PDF
+            </button>
+          </div>
+        </div>
 
-  </div>
-</div>
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Buscar clientes
+              </h2>
 
-            <div className="mb-6 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <div className="flex flex-col gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Buscar clientes
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Pesquise por nome, e-mail
-                    ou empresa.
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-4">
-                  <input
-                    type="text"
-                    placeholder="Digite nome, e-mail ou empresa..."
-                    value={busca}
-                    onChange={(e) => {
-                      setBusca(
-                        e.target.value
-                      );
-                      setPaginaAtual(1);
-                    }}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
-                  />
-
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        "Todos",
-                        "Ativo",
-                        "Prospect",
-                        "Inativo",
-                      ].map((status) => (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => {
-                            setFiltroStatus(
-                              status
-                            );
-                            setPaginaAtual(
-                              1
-                            );
-                          }}
-                          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                            filtroStatus ===
-                            status
-                              ? "bg-gray-900 text-white shadow-sm"
-                              : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {status}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                      <label
-                        htmlFor="ordenacao-clientes"
-                        className="text-sm font-medium text-gray-600"
-                      >
-                        Ordenar por:
-                      </label>
-
-                      <select
-                        id="ordenacao-clientes"
-                        value={ordenacao}
-                        onChange={(e) => {
-                          setOrdenacao(
-                            e.target.value
-                          );
-                          setPaginaAtual(1);
-                        }}
-                        className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
-                      >
-                        <option value="recentes">
-                          Mais recentes
-                        </option>
-
-                        <option value="antigos">
-                          Mais antigos
-                        </option>
-
-                        <option value="nome-az">
-                          Nome A–Z
-                        </option>
-
-                        <option value="nome-za">
-                          Nome Z–A
-                        </option>
-
-                        <option value="empresa-az">
-                          Empresa A–Z
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {(busca ||
-                    filtroStatus !==
-                      "Todos") && (
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
-                      <p className="text-sm text-gray-500">
-                        {
-                          clientesFiltrados.length
-                        }{" "}
-                        cliente(s)
-                        encontrado(s)
-                      </p>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setBusca("");
-                          setFiltroStatus(
-                            "Todos"
-                          );
-                          setPaginaAtual(1);
-                        }}
-                        className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
-                      >
-                        Limpar filtros
-                      </button>
-                    </div>
-                  )}
-              </div>
+              <p className="mt-1 text-sm text-gray-500">
+                Pesquise por nome, e-mail ou empresa.
+              </p>
             </div>
 
-            {clienteHistorico && (
-              <div
-                ref={historicoRef}
-                className="mt-6 scroll-mt-6"
-              >
-                <div className="mb-3 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setClienteHistorico(
-                        null
-                      )
-                    }
-                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-                  >
-                    Fechar histórico
-                  </button>
+            <div className="flex flex-col gap-4">
+              <input
+                type="text"
+                placeholder="Digite nome, e-mail ou empresa..."
+                value={busca}
+                onChange={(e) => {
+                  setBusca(e.target.value);
+                  setPaginaAtual(1);
+                }}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
+              />
+
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {["Todos", "Ativo", "Prospect", "Inativo"].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => {
+                        setFiltroStatus(status);
+                        setPaginaAtual(1);
+                      }}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                        filtroStatus === status
+                          ? "bg-gray-900 text-white shadow-sm"
+                          : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
                 </div>
 
-                <InteracoesCliente
-                  clienteId={
-                    clienteHistorico.id
-                  }
-                  clienteNome={
-                    clienteHistorico.nome
-                  }
-                  onInteracoesAlteradas={async () => {
-                    await Promise.all([
-                      carregarAcompanhamentos(),
-                      carregarIndicadoresComerciais(),
-                      carregarInteracoesPorTipo(),
-                      carregarInteracoesPorDia(),
-                    ]);
-                  }}
-                />
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <label
+                    htmlFor="ordenacao-clientes"
+                    className="text-sm font-medium text-gray-600"
+                  >
+                    Ordenar por:
+                  </label>
+
+                  <select
+                    id="ordenacao-clientes"
+                    value={ordenacao}
+                    onChange={(e) => {
+                      setOrdenacao(e.target.value);
+                      setPaginaAtual(1);
+                    }}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
+                  >
+                    <option value="recentes">Mais recentes</option>
+                    <option value="antigos">Mais antigos</option>
+                    <option value="nome-az">Nome A–Z</option>
+                    <option value="nome-za">Nome Z–A</option>
+                    <option value="empresa-az">Empresa A–Z</option>
+                  </select>
+                </div>
               </div>
-            )}
 
-            <ListaClientes
-              clientes={
-                clientesPaginados
-              }
-              onEditar={
-                setClienteEditando
-              }
-              onExcluir={
-                excluirCliente
-              }
-              onAbrirHistorico={
-                abrirHistorico
-              }
-            />
-
-            {clientesOrdenados.length > 0 && (
-              <div className="mt-6 border-t border-gray-100 pt-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              {(busca || filtroStatus !== "Todos") && (
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
                   <p className="text-sm text-gray-500">
-                    Exibindo{" "}
-                    <span className="font-medium text-gray-700">
-                      {primeiroClienteExibido}–
-                      {ultimoClienteExibido}
-                    </span>{" "}
-                    de{" "}
-                    <span className="font-medium text-gray-700">
-                      {
-                        clientesOrdenados.length
-                      }
-                    </span>{" "}
-                    cliente(s)
+                    {clientesFiltrados.length} cliente(s) encontrado(s)
                   </p>
 
-                  <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPaginaAtual(
-                          (pagina) =>
-                            Math.max(
-                              1,
-                              pagina - 1
-                            )
-                        )
-                      }
-                      disabled={
-                        paginaAtual === 1
-                      }
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-                    >
-                      Anterior
-                    </button>
-
-                    <span className="text-center text-sm text-gray-500">
-                      Página{" "}
-                      <span className="font-semibold text-gray-900">
-                        {paginaAtual}
-                      </span>{" "}
-                      de{" "}
-                      <span className="font-semibold text-gray-900">
-                        {totalPaginas}
-                      </span>
-                    </span>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPaginaAtual(
-                          (pagina) =>
-                            Math.min(
-                              totalPaginas,
-                              pagina + 1
-                            )
-                        )
-                      }
-                      disabled={
-                        paginaAtual ===
-                        totalPaginas
-                      }
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-                    >
-                      Próxima
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBusca("");
+                      setFiltroStatus("Todos");
+                      setPaginaAtual(1);
+                    }}
+                    className="text-sm font-medium text-gray-600 transition hover:text-gray-900"
+                  >
+                    Limpar filtros
+                  </button>
                 </div>
-              </div>
-            )}
-
-          <FooterCRM />
+              )}
+            </div>
+          </div>
         </div>
-      </main>
-      );
+
+        {clienteHistorico && (
+          <div ref={historicoRef} className="mt-6 scroll-mt-6">
+            <div className="mb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setClienteHistorico(null)}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+              >
+                Fechar histórico
+              </button>
+            </div>
+
+            <InteracoesCliente
+              clienteId={clienteHistorico.id}
+              clienteNome={clienteHistorico.nome}
+              onInteracoesAlteradas={async () => {
+                await Promise.all([
+                  carregarAcompanhamentos(),
+                  carregarIndicadoresComerciais(),
+                  carregarInteracoesPorTipo(),
+                  carregarInteracoesPorDia(),
+                  carregarClientesSemInteracao(),
+                  carregarRankingClientes(),
+                ]);
+              }}
+            />
+          </div>
+        )}
+
+        <ListaClientes
+          clientes={clientesPaginados}
+          onEditar={editarCliente}
+          onExcluir={excluirCliente}
+          onAbrirHistorico={abrirHistorico}
+        />
+
+        {clientesOrdenados.length > 0 && (
+          <div className="mt-6 border-t border-gray-100 pt-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-gray-500">
+                Exibindo <span className="font-medium text-gray-700">{primeiroClienteExibido}–{ultimoClienteExibido}</span> de <span className="font-medium text-gray-700">{clientesOrdenados.length}</span> cliente(s)
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPaginaAtual((pagina) => Math.max(1, pagina - 1))
+                  }
+                  disabled={paginaAtual === 1}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                >
+                  Anterior
+                </button>
+
+                <span className="text-center text-sm text-gray-500">
+                  Página <span className="font-semibold text-gray-900">{paginaAtual}</span> de <span className="font-semibold text-gray-900">{totalPaginas}</span>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPaginaAtual((pagina) => Math.min(totalPaginas, pagina + 1))
+                  }
+                  disabled={paginaAtual === totalPaginas}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                >
+                  Próxima
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <FooterCRM />
+      </div>
+    </main>
+  )
 }
